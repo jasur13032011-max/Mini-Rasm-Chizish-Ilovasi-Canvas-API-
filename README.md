@@ -1,181 +1,65 @@
 # Mini-Rasm-Chizish-Ilovasi-Canvas-API-
-JavaScript Kod:
-JavaScript
-// ==========================================
-// 1. NODE VA LINKEDLIST KLASSlari
-// ==========================================
+Python
+# 1. 10+ mahsulotdan iborat dict ro'yxati
+mahsulotlar = [
+    {"nom": "Noutbuk", "narx": 12000000, "soni": 5, "kategoriya": "Elektronika"},
+    {"nom": "Telefon", "narx": 6000000, "soni": 12, "kategoriya": "Elektronika"},
+    {"nom": "Smart Soat", "narx": 1500000, "soni": 8, "kategoriya": "Elektronika"},
+    {"nom": "Klaviatura", "narx": 450000, "soni": 20, "kategoriya": "Aksessuarlar"},
+    {"nom": "Sichqoncha", "narx": 250000, "soni": 25, "kategoriya": "Aksessuarlar"},
+    {"nom": "Stul", "narx": 1200000, "soni": 6, "kategoriya": "Mebel"},
+    {"nom": "Stol", "narx": 1500000, "soni": 4, "kategoriya": "Mebel"},
+    {"nom": "Monitor", "narx": 3500000, "soni": 7, "kategoriya": "Elektronika"},
+    {"nom": "Quloqchin", "narx": 800000, "soni": 15, "kategoriya": "Aksessuarlar"},
+    {"nom": "Chiroq", "narx": 150000, "soni": 30, "kategoriya": "Uy-ro'zg'or"},
+    {"nom": "Gilam", "narx": 2500000, "soni": 3, "kategoriya": "Uy-ro'zg'or"},
+]
 
-// Har bir qo'shiq (Node) obyekti
-class Node {
-    constructor(data) {
-        this.data = data; // Qo'shiq nomi
-        this.next = null; // Keyingi qo'shiqqa ko'rsatkich
-        this.prev = null; // Oldingi qo'shiqqa ko'rsatkich (DLL uchun)
-    }
-}
+# Yordamchi funksiya: Mahsulotlarni f-string formatda chiroyli chiqarish
+def mahsulotlarni_chiqar(royxat, sarlavha):
+    print(f"\n=== {sarlavha} ===")
+    print(f"{'Nom':<15} | {'Narx (so`m)':<12} | {'Soni':<6} | {'Kategoriya':<12}")
+    print("-" * 55)
+    for p in royxat:
+        print(f"{p['nom']:<15} | {p['narx']:<12,} | {p['soni']:<6} | {p['kategoriya']:<12}")
 
-// Pleylist (Doubly Linked List) klassi
-class LinkedList {
-    constructor() {
-        this.head = null;         // Ro'yxat boshi
-        this.tail = null;         // Ro'yxat oxiri
-        this.current = null;      // Hozirgi ijro etilayotgan qo'shiq
-    }
+# --- 2. Narx bo'yicha saralash (Oshuvchi va Kamayuvchi) ---
+oshuvchi = sorted(mahsulotlar, key=lambda p: p['narx'])
+mahsulotlarni_chiqar(oshuvchi, "Narxlar oshib borish tartibida")
 
-    // A. Pleylist oxiriga qo'shiq qo'shish
-    append(songName) {
-        const newNode = new Node(songName);
-        if (!this.head) {
-            this.head = newNode;
-            this.tail = newNode;
-        } else {
-            this.tail.next = newNode;
-            newNode.prev = this.tail;
-            this.tail = newNode;
-        }
-        console.log(`🎵 "${songName}" pleylist oxiriga qo'shildi.`);
-    }
+kamayuvchi = sorted(mahsulotlar, key=lambda p: p['narx'], reverse=True)
+mahsulotlarni_chiqar(kamayuvchi, "Narxlar kamayib borish tartibida")
 
-    // B. Pleylist boshiga qo'shiq qo'shish
-    prepend(songName) {
-        const newNode = new Node(songName);
-        if (!this.head) {
-            this.head = newNode;
-            this.tail = newNode;
-        } else {
-            newNode.next = this.head;
-            this.head.prev = newNode;
-            this.head = newNode;
-        }
-        console.log(`⏮ "${songName}" pleylist boshiga qo'shildi.`);
-    }
+# --- 3. Bir nechta mezon bilan saralash ---
+# Narxi bo'yicha kamayuvchi (oldinga minus qo'yilgan), narxi teng bo'lsa nomi bo'yicha alifbo tartibida (oshib boruvchi)
+murakkab_saralash = sorted(mahsulotlar, key=lambda p: (-p['narx'], p['nom']))
+mahsulotlarni_chiqar(murakkab_saralash, "Narxi bo'yicha kamayuvchi, nomi bo'yicha oshuvchi saralash")
 
-    // C. Qo'shiqni nomi bo'yicha o'chirish
-    remove(songName) {
-        if (!this.head) {
-            console.error("❌ Xato: Pleylist bo'sh, o'chirish imkonsiz!");
-            return;
-        }
+# --- 4. min va max yordamida eng arzon va eng qimmatni topish ---
+eng_arzon = min(mahsulotlar, key=lambda p: p['narx'])
+eng_qimmat = max(mahsulotlar, key=lambda p: p['narx'])
 
-        let curr = this.head;
-        while (curr) {
-            if (curr.data === songName) {
-                // Agar o'chirilayotgan qo'shiq joriy ijro etilayotgan bo'lsa, uni keyingisiga suramiz
-                if (this.current === curr) {
-                    this.current = curr.next || curr.prev;
-                }
+print(f"\n💰 Eng arzon mahsulot: {eng_arzon['nom']} — {eng_arzon['narx']:,} so'm")
+print(f"💎 Eng qimmat mahsulot: {eng_qimmat['nom']} — {eng_qimmat['narx']:,} so'm")
 
-                if (curr === this.head) {
-                    this.head = curr.next;
-                    if (this.head) this.head.prev = null;
-                } else if (curr === this.tail) {
-                    this.tail = curr.prev;
-                    if (this.tail) this.tail.next = null;
-                } else {
-                    curr.prev.next = curr.next;
-                    curr.next.prev = curr.prev;
-                }
+# --- 5. filter + lambda bilan kategoriya bo'yicha izlash ---
+kategoriya_nomi = "Elektronika"
+filtr hisoblangan = list(filter(lambda p: p['kategoriya'] == kategoriya_nomi, mahsulotlar))
+mahsulotlarni_chiqar(filtr hisoblangan, f"'{kategoriya_nomi}' kategoriyasidagi mahsulotlar")
 
-                console.log(`🗑 "${songName}" pleylistdan o'chirildi.`);
-                return;
-            }
-            curr = curr.next;
-        }
-        console.warn(`⚠️ Ogohlantirish: "${songName}" topilmadi.`);
-    }
+# --- 6. map ishlatib umumiy summalarni hisoblash ---
+# Har bir mahsulotning umumiy qiymatini (narx * soni) hisoblaymiz
+summalar = list(map(lambda p: p['narx'] * p['soni'], mahsulotlar))
+jami_summa = sum(summalar)
 
-    // D. Pleylistni konsolga chiqarish
-    display() {
-        if (!this.head) {
-            console.log("Empty Playlist: []");
-            return;
-        }
-        let curr = this.head;
-        let listStr = "PlayList: ";
-        while (curr) {
-            listStr += `[${curr.data}] <-> `;
-            curr = curr.next;
-        }
-        console.log(listStr + "NULL");
-    }
+print(f"\n📊 Do'kondagi barcha mahsulotlarning umumiy qiymati: {jami_summa:,} so'm")
+Kodda bajarilgan talablar tahlili:
+Ma'lumotlar ombori: mahsulotlar ro'yxatida 11 ta mahsulot (nom, narx, soni, kategoriya kalitlari bilan) shakllantirildi.
 
-    // E. Hozirgi ijro etilayotgan qo'shiqni ko'rish
-    currentSong() {
-        if (!this.head) {
-            console.error("❌ Xato: Pleylist bo'sh! Hech qanday qo'shiq ijro etilmayapti.");
-            return null;
-        }
-        if (!this.current) {
-            this.current = this.head; // Agar hali boshlanmagan bo'lsa, birinchisini qo'yamiz
-        }
-        console.log(`▶️ Hozir ijro etilmoqda: "${this.current.data}"`);
-        return this.current.data;
-    }
+Saralash: sorted() va lambda orqali ham oddiy (oshib/kamayuvchi), ham bir nechta shartli (-p['narx'], p['nom']) tartiblash amallari bajarildi.
 
-    // F. Keyingi qo'shiqqa o'tish
-    next() {
-        if (!this.head) {
-            console.error("❌ Xato: Pleylist bo'sh!");
-            return;
-        }
-        if (!this.current) this.current = this.head;
+Ekstremumlar: min() va max() funksiyalariga mos key berilib, kerakli elementlar topildi.
 
-        if (this.current.next) {
-            this.current = this.current.next;
-            console.log(`⏭ Keyingi qo'shiqqa o'tildi: "${this.current.data}"`);
-        } else {
-            console.log("🔁 Pleylist tugadi. Oxirgi qo'shiqdasi.");
-        }
-    }
+Filtrlash va Xaritalash: filter() yordamida ma'lum toifadagi tovarlar ajratildi, map() yordamida esa umumiy aylanma mablag' oson hisoblab olindi.
 
-    // G. Oldingi qo'shiqqa o'tish (DLL yordamida)
-    prev() {
-        if (!this.head) {
-            console.error("❌ Xato: Pleylist bo'sh!");
-            return;
-        }
-        if (!this.current) this.current = this.head;
-
-        if (this.current.prev) {
-            this.current = this.current.prev;
-            console.log(`⏮ Oldingi qo'shiqqa o'tildi: "${this.current.data}"`);
-        } else {
-            console.log("🔕 Bu birinchi qo'shiq, undan oldin hech narsa yo'q.");
-        }
-    }
-}
-
-
-// ==========================================
-// 2. SINAB KO'RISH (DEMO RUN)
-// ==========================================
-
-console.log("--- 1-TEST: Bo'sh pleylist holati ---");
-const myPlaylist = new LinkedList();
-myPlaylist.currentSong(); // Bo'sh bo'lgani uchun xato chiqaradi
-myPlaylist.next();        // Xato chiqaradi
-
-console.log("\n--- 2-TEST: Kamida 5 ta qo'shiq qo'shish ---");
-myPlaylist.append("Qo'shiq 1: Uzb Rap");
-myPlaylist.append("Qo'shiq 2: Lo-Fi Chill");
-myPlaylist.append("Qo'shiq 3: Classical Piano");
-myPlaylist.append("Qo'shiq 4: Pop Energy");
-myPlaylist.prepend("Qo'shiq 0: Boshlang'ich Intro"); // prepend testi
-
-myPlaylist.display(); // Pleylist tarkibini ko'rish
-
-console.log("\n--- 3-TEST: Navigatsiya (Current, Next, Prev) ---");
-myPlaylist.currentSong(); // Qo'shiq 0 ni chiqarishi kerak
-myPlaylist.next();        // Qo'shiq 1 ga o'tadi
-myPlaylist.next();        // Qo'shiq 2 ga o'tadi
-myPlaylist.prev();        // Orqaga qaytadi: Qo'shiq 1 ga
-
-console.log("\n--- 4-TEST: O'chirish (Remove) ---");
-myPlaylist.remove("Qo'shiq 2: Lo-Fi Chill");
-myPlaylist.display();
-Kod qanday talablarni bajardi?
-DLL ishlatilishi: Node klassiga this.prev xossasi qo'shildi. Bu prev() metodi chaqirilganda har bir qo'shiqdan orqaga osongina o'tishga imkon beradi.
-
-Xatolar nazorati: Agar myPlaylist obyekti bo'sh bo'lsa (this.head === null), currentSong(), next(), prev() va remove() metodlari console.error orqali to'g'ri ogohlantirish beradi.
-
-Metodlar to'liqligi: append, prepend, remove, display
+Vizualizatsiya: Barcha ma'lumotlar f-string formatlash kodlari ({val:<width} va raqamlarni ajratuvchi {val:,}) yordamida chiroyli jadval ko'rinishida konsolga chiqarildi.
