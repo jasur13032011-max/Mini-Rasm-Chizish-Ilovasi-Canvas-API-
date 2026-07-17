@@ -1,7 +1,7 @@
 # Mini-Rasm-Chizish-Ilovasi-Canvas-API-
-Mana, fayllarni sudrab kelib tashlash (Drag and Drop) tizimi uchun barcha shartlarga to'liq javob beradigan, chiroyli dizayn va to'liq JavaScript funksionalligiga ega kod namunasi.
+Mana, brauzerning apparat ta'minoti va sensorlari (Kamera va Geolokatsiya) bilan ishlash uchun barcha talablarga javob beradigan, zamonaviy va mukammal kod namunasi.
 
-Ushbu loyihada rasmlar ekranda vizual ko'rinadi, matnli fayllar (.txt, .json va h.k.) tarkibi esa o'qilib, maxsus qutida ko'rsatiladi.
+Ushbu dasturda joylashuvni aniqlash (bir martalik va doimiy kuzatish), kamerani yoqish, ruxsatnomalarni tekshirish (try/catch xatoliklar nazorati bilan) va rasmga olish funksiyalari to'liq qamrab olingan.
 
 index.html fayli kodi:
 HTML
@@ -10,209 +10,261 @@ HTML
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Drag and Drop Fayl Yuklagich</title>
+    <title>Media va Geolokatsiya Tizimi</title>
     <style>
         body {
-            font-family: 'Segoe UI', Arial, sans-serif;
-            background-color: #f7f9fc;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
             margin: 0;
             padding: 20px;
             display: flex;
             flex-direction: column;
             align-items: center;
         }
-        h2 { color: #333; }
-        
-        /* Drag and Drop Hududi */
-        .drop-zone {
+        .container {
             width: 100%;
-            max-width: 600px;
-            height: 200px;
-            border: 3px dashed #007bff;
+            max-width: 800px;
+            background: white;
+            padding: 20px;
             border-radius: 12px;
-            background-color: #fff;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            color: #007bff;
-            cursor: pointer;
-            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        h2, h3 { color: #333; margin-top: 0; }
+        .section {
+            border-bottom: 2px solid #eee;
+            padding-bottom: 20px;
             margin-bottom: 20px;
         }
-        /* Sichqoncha ustiga kelgandagi holat */
-        .drop-zone.drag-over {
-            background-color: #e6f2ff;
-            border-color: #0056b3;
-            transform: scale(1.02);
-        }
-        .drop-zone p {
-            margin: 10px 0 0 0;
-            font-size: 16px;
-            font-weight: bold;
-        }
-
-        /* Natijalar ro'yxati */
-        .file-list {
-            width: 100%;
-            max-width: 600px;
+        .section:last-child { border-bottom: none; }
+        .btn-group {
             display: flex;
-            flex-direction: column;
-            gap: 15px;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
         }
-        .file-card {
-            background: white;
-            padding: 15px;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-            border-left: 5px solid #28a745;
+        button {
+            padding: 10px 18px;
+            border: none;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s, opacity 0.2s;
+            color: white;
         }
-        .file-info {
-            font-size: 14px;
-            color: #555;
-            margin-bottom: 10px;
-        }
-        .file-info strong { color: #222; }
+        .btn-blue { background-color: #007bff; }
+        .btn-blue:hover { background-color: #0056b3; }
+        .btn-orange { background-color: #fd7e14; }
+        .btn-orange:hover { background-color: #d96203; }
+        .btn-red { background-color: #dc3545; }
+        .btn-red:hover { background-color: #bd2130; }
+        .btn-green { background-color: #28a745; }
+        .btn-green:hover { background-color: #218838; }
         
-        /* Fayl kontenti uchun vizualizatsiya */
-        .preview-img {
-            max-width: 100%;
-            max-height: 200px;
+        .status-box {
+            padding: 10px 15px;
+            background: #e9ecef;
             border-radius: 6px;
-            margin-top: 5px;
-            border: 1px solid #ddd;
-        }
-        .preview-text {
-            background: #f1f3f5;
-            padding: 10px;
-            border-radius: 6px;
-            max-height: 150px;
-            overflow-y: auto;
             font-family: monospace;
-            font-size: 13px;
+            font-size: 14px;
             white-space: pre-wrap;
-            border: 1px solid #e2e8f0;
+            margin-top: 10px;
         }
-        .error-card {
-            border-left-color: #dc3545;
-            color: #dc3545;
+        .media-container {
+            display: flex;
+            gap: 20px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+        video, canvas {
+            width: 100%;
+            max-width: 360px;
+            height: 270px;
+            border-radius: 8px;
+            background: #222;
+            border: 2px solid #ddd;
         }
     </style>
 </head>
 <body>
 
-    <h2>Fayllarni yuklash (Drag & Drop)</h2>
-    
-    <div id="dropZone" class="drop-zone">
-        <svg width="48" height="48" fill="currentColor" viewBox="0 0 16 16">
-            <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/>
-            <path d="M7.646 1.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1-.708.708L8.5 2.707V11.5a.5.5 0 0 1-1 0V2.707L5.354 4.854a.5.5 0 1 1-.708-.708l3-3z"/>
-        </svg>
-        <p>Fayllarni shu yerga sudrab keling (Faqat rasm va matnlar)</p>
+<div class="container">
+    <h2>Sensorlar va Media API (HTML5)</h2>
+
+    <div class="section">
+        <h3>1. Geolokatsiya (Joylashuv)</h3>
+        <div class="btn-group">
+            <button class="btn-blue" onclick="getOneTimeLocation()">Hozirgi joylashuvni olish</button>
+            <button class="btn-orange" onclick="startTracking()">Kuzatishni boshlash (Watch)</button>
+            <button class="btn-red" onclick="stopTracking()">Kuzatishni to'xtatish (Clear)</button>
+        </div>
+        <div id="geoStatus" class="status-box">Joylashuv haqida ma'lumot yo'q...</div>
     </div>
 
-    <div id="fileList" class="file-list"></div>
+    <div class="section">
+        <h3>2. Kamera va Rasmga olish (Webcam & Canvas)</h3>
+        <div class="btn-group">
+            <button class="btn-green" onclick="startCamera()">Kamerani yoqish</button>
+            <button class="btn-red" onclick="stopCamera()">Kamerani o'chirish</button>
+            <button class="btn-blue" onclick="takeSnapshot()">Rasmga olish (Capture)</button>
+        </div>
+        <div id="cameraStatus" class="status-box" style="margin-bottom: 15px; background: #fff3cd; color: #856404;">Kameraga ruxsat berilmagan.</div>
+        
+        <div class="media-container">
+            <div>
+                <h4>Jonli video (Video Stream)</h4>
+                <video id="webcam" autoplay playsinline></video>
+            </div>
+            <div>
+                <h4>Olingan rasm (Canvas Capture)</h4>
+                <canvas id="photoCanvas" width="640" height="480"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
 
 <script>
-    const dropZone = document.getElementById("dropZone");
-    const fileList = document.getElementById("fileList");
+    // --- GLOBAL O'ZGARUVCHILAR ---
+    let watchId = null; // watchPosition ID sini saqlash uchun
+    let localStream = null; // Kameradan kelayotgan streamni o'chirish uchun saqlaymiz
 
-    // --- 1. HODISALARNI BOSHQARISH (Drag & Drop) ---
+    const geoStatus = document.getElementById("geoStatus");
+    const cameraStatus = document.getElementById("cameraStatus");
+    const video = document.getElementById("webcam");
+    const canvas = document.getElementById("photoCanvas");
+    const ctx = canvas.getContext("2d");
 
-    // dragover: fayl zona ustida turganda
-    dropZone.addEventListener("dragover", (e) => {
-        e.preventDefault(); // Brauzer faylni ochib yubormasligi uchun shart
-        dropZone.classList.add("drag-over");
-    });
+    // Geolokatsiya sozlamalari (options)
+    const geoOptions = {
+        enableHighAccuracy: true, // Yuqori aniqlikda olish
+        timeout: 5000,            // 5 soniya kutish muddati
+        maximumAge: 0             // Keshlangan ma'lumotni ishlatmaslik
+    };
 
-    // dragleave: fayl zonadan chiqib ketganda
-    dropZone.addEventListener("dragleave", () => {
-        dropZone.classList.remove("drag-over");
-    });
+    // --- 1. GEOLOKATSIYA FUNKSIYALARI ---
 
-    // drop: fayl zonaga tashlanganda
-    dropZone.addEventListener("drop", (e) => {
-        e.preventDefault(); // Brauzer defolt amalini to'xtatish
-        dropZone.classList.remove("drag-over");
-
-        // e.dataTransfer.files orqali bir vaqtning o'zida bir nechta fayllarni olish
-        const files = e.dataTransfer.files;
+    // Bir martalik joylashuvni olish (getCurrentPosition)
+    function getOneTimeLocation() {
+        geoStatus.textContent = "Joylashuv aniqlanmoqda...";
         
-        if (files.length > 0) {
-            handleFiles(files);
+        // Navigator geolokatsiyasini xato boshqaruvi bilan ishlatish
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                const lat = position.coords.latitude;
+                const lon = position.coords.longitude;
+                const acc = position.coords.accuracy;
+                geoStatus.textContent = `Muvaffaqiyatli aniqlandi!\nKenglik (Latitude): ${lat}°\nUzunlik (Longitude): ${lon}°\nAniqlik darajasi: ${acc} metr`;
+            },
+            (error) => {
+                handleGeoError(error);
+            },
+            geoOptions
+        );
+    }
+
+    // Doimiy kuzatishni boshlash (watchPosition)
+    function startTracking() {
+        if (watchId !== null) {
+            geoStatus.textContent = "Kuzatish allaqachon faollashtirilgan.";
+            return;
         }
-    });
 
-    // --- 2. FAYLLARNI QAYTA ISHLASH FUNKSIYASI ---
-    function handleFiles(files) {
-        // Har bir faylni siklda aylanish (Bir nechta fayl tushirilganda ishlaydi)
-        Array.from(files).forEach(file => {
-            createFileCard(file);
-        });
-    }
-
-    // --- 3. FAYL HAJMING FORMATLASH (KB/MB) ---
-    function formatFileSize(bytes) {
-        if (bytes === 0) return '0 Bytes';
-        const k = 1024;
-        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-        const i = Math.floor(Math.log(bytes) / Math.log(k));
-        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-    }
-
-    // --- 4. FAYL KARTASINI YARATISH VA O'QISH ---
-    function createFileCard(file) {
-        const card = document.createElement("div");
-        card.className = "file-card";
-
-        const formattedSize = formatFileSize(file.size);
-        const lastModDate = new Date(file.lastModified).toLocaleDateString();
-
-        // Boshlang'ich ma'lumotlar strukturasi (file.name, file.size, file.type, file.lastModified)
-        card.innerHTML = `
-            <div class="file-info">
-                <strong>Nomi:</strong> ${file.name} <br>
-                <strong>Hajmi:</strong> ${formattedSize} <br>
-                <strong>Turi:</strong> ${file.type || 'Noma\'lum'} <br>
-                <strong>O'zgartirilgan sana:</strong> ${lastModDate}
-            </div>
-            <div class="preview-container">Yuklanmoqda...</div>
-        `;
+        geoStatus.textContent = "Kuzatish boshlandi...";
         
-        fileList.appendChild(card);
-        const previewContainer = card.querySelector(".preview-container");
+        // watchPosition id saqlanadi
+        watchId = navigator.geolocation.watchPosition(
+            (position) => {
+                const lat = position.coords.latitude;
+                const lon = position.coords.longitude;
+                geoStatus.textContent = `[Kuzatuvda...]\nKenglik (Latitude): ${lat}°\nUzunlik (Longitude): ${lon}°\nSana: ${new Date(position.timestamp).toLocaleTimeString()}`;
+            },
+            (error) => {
+                handleGeoError(error);
+            },
+            geoOptions
+        );
+    }
 
-        // --- 5. file.type TEKSHIRUVI (Faqat rasm va matn) ---
-        const reader = new FileReader();
-
-        if (file.type.startsWith("image/")) {
-            // Rasm bo'lsa: readAsDataURL() ishlatiladi
-            reader.readAsDataURL(file);
-            
-            reader.onload = function(e) {
-                previewContainer.innerHTML = `<img src="${e.target.result}" class="preview-img" alt="Preview">`;
-            };
-            reader.onerror = function() {
-                previewContainer.innerHTML = "<span style='color:red;'>Rasmni o'qishda xatolik!</span>";
-            };
-
-        } else if (file.type.startsWith("text/") || file.name.endsWith(".json") || file.name.endsWith(".js")) {
-            // Matnli fayl bo'lsa: readAsText() ishlatiladi
-            reader.readAsText(file);
-            
-            reader.onload = function(e) {
-                // Xavfsizlik uchun matn ichidagi < va > belgilarini almashtiramiz (HTML injection oldini olish)
-                const safeText = e.target.result.replace(/</g, "&lt;").replace(/>/g, "&gt;");
-                previewContainer.innerHTML = `<pre class="preview-text">${safeText}</pre>`;
-            };
-            reader.onerror = function() {
-                previewContainer.innerHTML = "<span style='color:red;'>Matnni o'qishda xatolik!</span>";
-            };
-
+    // Kuzatishni to'xtatish (clearWatch)
+    function stopTracking() {
+        if (watchId !== null) {
+            navigator.geolocation.clearWatch(watchId); // To'xtatish
+            watchId = null;
+            geoStatus.textContent = "Joylashuvni kuzatish to'xtatildi.";
         } else {
-            // Agar rasm yoki matn bo'lmasa, rad etiladi
-            card.classList.add("error-card");
-            previewContainer.innerHTML = `<strong>Xatolik:</strong> Ushbu fayl turi qo'llab-quvvatlanmaydi (Faqat rasm va matn yuklang).`;
+            geoStatus.textContent = "Faol kuzatuv topilmadi.";
+        }
+    }
+
+    // Geolokatsiya xatolarini boshqarish
+    function handleGeoError(error) {
+        switch(error.code) {
+            case error.PERMISSION_DENIED:
+                geoStatus.textContent = "Xatolik: Foydalanuvchi joylashuvini ko'rishga ruxsat bermadi.";
+                break;
+            case error.POSITION_UNAVAILABLE:
+                geoStatus.textContent = "Xatolik: Joylashuv ma'lumotlarini aniqlab bo'lmadi.";
+                break;
+            case error.TIMEOUT:
+                geoStatus.textContent = "Xatolik: So'rov vaqti tugadi (Timeout).";
+                break;
+            default:
+                geoStatus.textContent = "Xatolik: Noma'lum muammo yuz berdi.";
+                break;
+        }
+    }
+
+
+    // --- 2. KAMERA VA SURATGA OLISH FUNKSIYALARI ---
+
+    // Kamerani ishga tushirish (getUserMedia)
+    async function startCamera() {
+        // Barcha ruxsat so'rovlari try/catch bilan boshqarilgan
+        try {
+            cameraStatus.textContent = "Kamera so'ralmoqda...";
+            
+            // Kamera ruxsatnomasiz ishlayolmasligi shu yerda ko'rsatiladi: 
+            // Agar ruxsat rad etilsa yoki qurilma bo'lmasa, catch blokiga o'tadi.
+            const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+            
+            localStream = stream;
+            // Video stream <video> elementiga srcObject orqali bog'langan
+            video.srcObject = stream;
+            
+            cameraStatus.textContent = "Kamera muvaffaqiyatli ulandi va ishlamoqda.";
+            cameraStatus.style.background = "#d4edda";
+            cameraStatus.style.color = "#155724";
+        } catch (err) {
+            // Ruxsat berilmagan yoki kamera topilmagandagi xatoni boshqarish
+            cameraStatus.textContent = `Xatolik: Kamerani yoqib bo'lmadi!\nTafsilot: ${err.name} - ${err.message}`;
+            cameraStatus.style.background = "#f8d7da";
+            cameraStatus.style.color = "#721c24";
+            video.srcObject = null;
+        }
+    }
+
+    // Kamerani o'chirish
+    function stopCamera() {
+        if (localStream) {
+            // stream.getTracks().forEach(t => t.stop()) ishlatildi
+            localStream.getTracks().forEach(track => track.stop());
+            video.srcObject = null;
+            localStream = null;
+            cameraStatus.textContent = "Kamera o'chirildi.";
+            cameraStatus.style.background = "#fff3cd";
+            cameraStatus.style.color = "#856404";
+        } else {
+            cameraStatus.textContent = "O'chirish uchun faol kamera topilmadi.";
+        }
+    }
+
+    // Canvas yordamida suratga olish
+    function takeSnapshot() {
+        if (localStream && video.srcObject) {
+            // Canvas o'lchamlarini videoga moslash va videodagi joriy kadrni rasm qilib chizish
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            cameraStatus.textContent = "Surat muvaffaqiyatli olindi va Canvas-ga yuklandi!";
+        } else {
+            alert("Rasmga olish uchun oldin kamerani yoqing!");
         }
     }
 </script>
@@ -220,18 +272,14 @@ HTML
 </body>
 </html>
 Kodda bajarilgan talablar tahlili:
-Hodisalar (dragover, dragleave, drop): To'liq qo'shildi. dragover va drop ichida e.preventDefault() qo'llanib, brauzer faylni o'z-o'zidan yangi tabda ochib yuborishining oldi olindi.
+navigator.geolocation.getCurrentPosition(): Funksiya muvaffaqiyatli callback va batafsil xato callback'lari (handleGeoError) hamda maxsus sozlamalar (geoOptions) bilan xavfsiz tarzda ishlatilgan.
 
-e.dataTransfer.files: Tashlangan barcha fayllar ro'yxatini massiv ko'rinishida ushlab olish uchun muvaffaqiyatli ishlatildi.
+watchPosition() va clearWatch(): watchId o'zgaruvchisiga olingan qiymat saqlanadi va "To'xtatish" tugmasi bosilganda navigator.geolocation.clearWatch(watchId) yordamida jarayon to'xtatiladi.
 
-FileReader metodlari:
+getUserMedia({ video: true }) ruxsatnomasi: Ushbu asinxron API try/catch blokiga olingan bo'lib, foydalanuvchi ruxsat bermagan holatda brauzer xatolikni ushlab oladi va buni interfeysda ("Kameraga ruxsat berilmagan") ko'rsatadi.
 
-file.type.startsWith("image/") orqali rasm aniqlansa, reader.readAsDataURL(file) chaqiriladi.
+srcObject bog'lanishi: Kameradan olingan media oqim (stream) video elementining manbasiga video.srcObject = stream; shaklida bog'langan.
 
-Matnli fayllar uchun esa reader.readAsText(file) ishga tushadi.
+Surat olish (Canvas): ctx.drawImage(video, 0, 0, canvas.width, canvas.height) metodi yordamida videodagi joriy kadr xuddi rasm kabi canvasga chiziladi.
 
-Hajmni formatlash: formatFileSize() funksiyasi yordamida har bir fayl hajmi dinamik ravishda KB yoki MB o'lchov birligiga o'tkaziladi.
-
-file.type tekshiruvi: Tizim rasm va matndan boshqa formatdagi fayllarni qabul qilmaydi va foydalanuvchiga qizil ogohlantirish kartasini (error-card) ko'rsatadi.
-
-Ko'p sonli fayllar (Multiple Files): Array.from(files).forEach(...) yordamida foydalanuvchi bir vaqtning o'zida 3-4 ta faylni birdiga tashlasa ham, har biri alohida kartada muvaffaqiyatli qayta ishlanadi.
+Kamerani to'xtatish: stream.getTracks().forEach(t => t.stop()) konstruktsiyasi kameraning yorug'lik indikatori (yashil chirog'i) to'liq o'chishi uchun to'g'ri integratsiya qilingan.
